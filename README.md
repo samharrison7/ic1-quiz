@@ -1,0 +1,59 @@
+# UKCEH at IC1 — Booth quiz
+
+A six-question quiz for the UKCEH booth at the first International Conference of the Global Framework on Chemicals (IC1, 16–20 November 2026). Delegates scan a QR code (or use the booth iPad), answer, and see how everyone else answered. It follows the UKCEH branding of the [IC1 site](https://github.com/samharrison7/ic1-site).
+
+- **Page:** one static file, `index.html`, hosted on GitHub Pages. No build step.
+- **Answers:** a free [Supabase](https://supabase.com/) project (hosted Postgres).
+
+## Links
+
+| Use | Address |
+|---|---|
+| Quiz, for phones (this is what the QR code opens) | `https://samharrison7.github.io/ic1-quiz/` |
+| Quiz on the booth iPad | `https://samharrison7.github.io/ic1-quiz/?kiosk` |
+| All results on one screen | `https://samharrison7.github.io/ic1-quiz/#display` |
+| Results that scroll (what phones see) | `https://samharrison7.github.io/ic1-quiz/#results` |
+| Layout check with made-up numbers | `https://samharrison7.github.io/ic1-quiz/?demo#display` |
+
+Add `theme=light` for a white background, e.g. `?theme=light#display` or `?kiosk&theme=light`.
+
+`?kiosk` makes the quiz suit a shared device: it offers "Start again for the next person", and returns to the start by itself after 20 seconds on the thank-you screen or 60 seconds untouched. Without it, a phone that has answered shows the thank-you screen rather than the quiz, to discourage repeat answers.
+
+## One-off setup
+
+1. **Database:** in the Supabase dashboard, open **SQL Editor**, paste all of `supabase/schema.sql` and run it. It is safe to run again.
+2. **Key:** the project URL and publishable key are set near the top of the script in `index.html` (`SUPABASE_URL`, `SUPABASE_KEY`). The publishable key is meant to be public. Never put the secret key in this repo.
+3. **Hosting:** on GitHub, **Settings → Pages → Deploy from a branch → `main` / root**.
+
+## Before and during the event
+
+- **Wake the database:** free Supabase projects pause after a week without use. Answer the quiz once a day or two before the event, and check it appears on the display.
+- **Clear test answers:** in the SQL Editor, run `truncate public.responses restart identity;`
+- **Booth iPad:** open the address in Safari, then **Share → Add to Home Screen** to run it full screen. Use **Guided Access** (Settings → Accessibility) to lock the iPad to it. Hold the display iPad in landscape.
+- **Poor wifi:** answers are kept on the device and sent when the connection returns; the results page says how many are waiting. Don't clear the browser's site data while answers are waiting.
+- **Download the answers:** Supabase dashboard → **Table Editor → `responses_export` → Export to CSV**. This has one row per person, including any typed "Other" text.
+
+## What visitors can and can't do
+
+The page holds only the publishable key, and `supabase/schema.sql` limits that key to two things:
+
+- **Add an answer sheet.** The database rejects unknown questions or options, more than one pick on a choose-one question, and typed text over 80 characters.
+- **Read counts per option.** Individual rows and typed "Other" text are never sent to browsers, so nothing a visitor types can appear on the booth screen.
+
+No names, emails or IP addresses are stored. Anyone determined could still submit the form many times; the database stops accepting answers at 20,000 rows.
+
+The one-screen display shows only the share of people who got the Jet d'Eau question right, not the answer bars, so it doesn't give the answer away.
+
+## Changing the questions
+
+Edit `QUESTIONS` in `index.html` and `quiz_spec()` in `supabase/schema.sql` together (the option ids must match), then rerun the SQL file. If you add or remove a question, also update `DISPLAY_COLUMNS` in `index.html` and the `responses_export` view.
+
+## Local tooling
+
+Tooling is managed with [Pixi](https://pixi.sh/):
+
+```bash
+pixi run serve     # the page at http://localhost:4300 (try /?demo#display)
+pixi run test-db   # run schema.sql in a throwaway local Postgres and check its rules
+pixi run qr        # regenerate assets/qr.svg (the address is set in tools/make_qr.py)
+```

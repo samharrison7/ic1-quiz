@@ -1,0 +1,7 @@
+# Pixi environments
+.pixi
+*.egg-info
+
+# Local tooling
+.DS_Store
+/.tmp/
