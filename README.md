@@ -13,7 +13,9 @@ A six-question quiz for the UKCEH booth at the first International Conference of
 | Quiz on the booth iPad | `https://samharrison7.github.io/ic1-quiz/?kiosk` |
 | All results on one screen | `https://samharrison7.github.io/ic1-quiz/#display` |
 | Results that scroll (what phones see) | `https://samharrison7.github.io/ic1-quiz/#results` |
+| Booth team: check prize codes, tune the prize draw | `https://samharrison7.github.io/ic1-quiz/#staff` |
 | Layout check with made-up numbers | `https://samharrison7.github.io/ic1-quiz/?demo#display` |
+| Preview of the winner screen | `https://samharrison7.github.io/ic1-quiz/?demo&win` |
 
 Add `theme=light` for a white background, e.g. `?theme=light#display` or `?kiosk&theme=light`.
 
@@ -22,23 +24,49 @@ Add `theme=light` for a white background, e.g. `?theme=light#display` or `?kiosk
 ## One-off setup
 
 1. **Database:** in the Supabase dashboard, open **SQL Editor**, paste all of `supabase/schema.sql` and run it. It is safe to run again.
-2. **Key:** the project URL and publishable key are set near the top of the script in `index.html` (`SUPABASE_URL`, `SUPABASE_KEY`). The publishable key is meant to be public. Never put the secret key in this repo.
-3. **Hosting:** on GitHub, **Settings → Pages → Deploy from a branch → `main` / root**.
+2. **Team passphrase:** in the SQL Editor, run the line below with a passphrase of your own (at least 8 characters). It unlocks the `#staff` page. Don't save it in this repository, which is public.
+   ```sql
+   update public.quiz_settings set staff_passphrase = 'choose something long';
+   ```
+3. **Key:** the project URL and publishable key are set near the top of the script in `index.html` (`SUPABASE_URL`, `SUPABASE_KEY`). The publishable key is meant to be public. Never put the secret key in this repo.
+4. **Hosting:** on GitHub, **Settings → Pages → Deploy from a branch → `main` / root**.
+
+## Spot prizes
+
+When someone finishes the quiz, the database decides whether they win. A winner's screen turns green, says "You've won!" and shows a four-character code to bring to the booth.
+
+**At the booth:** open `#staff` on a team phone, enter the passphrase once, and type the winner's code into **Check a winner's code**. It says whether the code is real and marks it as claimed, so a screenshot can't be used twice. The page also lists every prize won so far.
+
+**Tuning the draw:** the same page has the settings. They take effect straight away.
+
+| Setting | Starts at | What it does |
+|---|---|---|
+| Give out prizes | on | Switch the draw off, for example overnight or when the booth is unstaffed |
+| Chance of winning | 1 in 25 | Each person who finishes has this chance |
+| Prizes in total | 10 | No more winners once this many have been won |
+| Shortest time between winners | 20 minutes | Spreads the prizes out and stops a run of winners |
+
+If prizes are going too fast, raise the "1 in" number or the gap; if too slowly, lower them. A prize that is won but never collected still counts towards the total, so raise the total if you want to give it out again.
+
+Who can win: anyone who answers at least four questions, on a phone or the booth iPad. An answer that was sent late because the device was offline can't win, because that person is no longer looking at the screen.
 
 ## Before and during the event
 
 - **Wake the database:** free Supabase projects pause after a week without use. Answer the quiz once a day or two before the event, and check it appears on the display.
-- **Clear test answers:** in the SQL Editor, run `truncate public.responses restart identity;`
+- **Clear test answers:** in the SQL Editor, run `truncate public.responses restart identity cascade;` This also clears any prizes the test answers won.
 - **Booth iPad:** open the address in Safari, then **Share → Add to Home Screen** to run it full screen. Use **Guided Access** (Settings → Accessibility) to lock the iPad to it. Hold the display iPad in landscape.
 - **Poor wifi:** answers are kept on the device and sent when the connection returns; the results page says how many are waiting. Don't clear the browser's site data while answers are waiting.
 - **Download the answers:** Supabase dashboard → **Table Editor → `responses_export` → Export to CSV**. This has one row per person, including any typed "Other" text.
 
 ## What visitors can and can't do
 
-The page holds only the publishable key, and `supabase/schema.sql` limits that key to two things:
+The page holds only the publishable key, and `supabase/schema.sql` limits that key to these things:
 
 - **Add an answer sheet.** The database rejects unknown questions or options, more picks than a question allows, and typed text over 80 characters.
+- **Learn whether that answer sheet won a prize.** The draw happens in the database, so the page can't be made to award one.
 - **Read counts per option.** Individual rows and typed "Other" text are never sent to browsers, so nothing a visitor types can appear on the booth screen.
+
+The `#staff` functions also go through that key, but do nothing without the team passphrase, which is stored only in the database.
 
 No names, emails or IP addresses are stored. Anyone determined could still submit the form many times; the database stops accepting answers at 20,000 rows.
 

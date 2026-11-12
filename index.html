@@ -231,6 +231,64 @@ h1, h2 { font-weight: 500; letter-spacing: -0.02em; line-height: 1.1; margin: 0 
   cursor: pointer;
 }
 
+/* ---------- Spot prize: the whole page turns data green ---------- */
+body.win-mode {
+  --bg: var(--ukceh-data);
+  --fg: var(--ukceh-black);
+  --muted: #2b2b2b;
+  --rule: var(--ukceh-black);
+  --panel: rgba(0, 0, 0, 0.08);
+  --accent: var(--ukceh-black);
+  color-scheme: light;
+}
+body.win-mode .jet { display: none; }
+body.win-mode .btn { background: var(--ukceh-black); border-color: var(--ukceh-black); color: var(--ukceh-white); }
+body.win-mode .btn.quiet { background: transparent; color: var(--ukceh-black); }
+#quiz .win-title { font-size: clamp(3.25rem, 15vw, 6rem); letter-spacing: -0.035em; line-height: 0.95; }
+.win-code {
+  display: inline-block;
+  margin: 0 0 1.5rem;
+  padding: 0.9rem 1.4rem 0.8rem;
+  background: var(--ukceh-black);
+  color: var(--ukceh-data);
+}
+.win-code small { display: block; margin-bottom: 0.3rem; font-size: 0.75rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ukceh-white); }
+.win-code b { display: block; font-size: clamp(2.75rem, 13vw, 4.5rem); font-weight: 500; letter-spacing: 0.14em; line-height: 1; margin-right: -0.14em; }
+@media (prefers-reduced-motion: no-preference) {
+  body.win-mode #quiz { animation: win-in 0.5s cubic-bezier(.2, .8, .2, 1); }
+  @keyframes win-in { from { opacity: 0; transform: translateY(1.5rem); } }
+}
+
+/* ---------- Booth team page ---------- */
+#staff { max-width: 41rem; margin: 0 auto; padding: 2.5rem 1.25rem calc(3rem + env(safe-area-inset-bottom, 0px)); }
+#staff h1 { font-size: clamp(2rem, 7vw, 3rem); letter-spacing: -0.025em; margin-bottom: 1.5rem; }
+#staff .chart { margin-bottom: 2.5rem; }
+#staff .chart h2 { margin-bottom: 1rem; }
+#staff form { display: grid; gap: 0.9rem; justify-items: start; }
+#staff label { display: grid; gap: 0.35rem; width: 100%; }
+#staff label.check { display: flex; align-items: center; gap: 0.6rem; }
+#staff label.check input { width: 1.3rem; height: 1.3rem; accent-color: var(--ukceh-data); }
+.field {
+  width: 100%;
+  max-width: 22rem;
+  padding: 0.7rem 0.9rem;
+  font: inherit;
+  font-size: max(1rem, 16px);
+  color: var(--fg);
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 0;
+}
+.field.num { max-width: 8rem; }
+.field.code { max-width: 12rem; font-size: 1.75rem; letter-spacing: 0.14em; text-transform: uppercase; }
+.verdict { margin: 1rem 0 0; padding: 1rem 1.1rem; font-size: 1.2rem; font-weight: 500; border-left: 2px solid var(--fg); background: var(--panel); }
+.verdict.good { background: var(--ukceh-data); color: var(--ukceh-black); border-color: var(--ukceh-data); }
+.verdict.bad { border-color: #ff6b5e; }
+.prize-list { display: grid; gap: 0.35rem; margin: 1rem 0 0; padding: 0; list-style: none; }
+.prize-list li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.25rem 1rem; padding: 0.5rem 0.7rem; background: var(--panel); font-variant-numeric: tabular-nums; }
+.prize-list b { font-weight: 500; letter-spacing: 0.1em; }
+.prize-list .open { color: var(--accent); }
+
 /* ---------- Results (scrolling view, for phones) ---------- */
 #results { max-width: 72rem; margin: 0 auto; padding: 2.5rem 1.25rem calc(3rem + env(safe-area-inset-bottom, 0px)); }
 .results-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem 2rem; margin-bottom: 2rem; }
@@ -385,6 +443,51 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
   <p class="d-status" id="d-status" hidden></p>
 </main>
 
+<main id="staff" hidden>
+  <p class="label">Booth team</p>
+  <h1>Spot prizes</h1>
+  <p class="note" id="staff-note" hidden></p>
+  <form id="staff-login">
+    <label for="staff-pass">Team passphrase
+      <input class="field" id="staff-pass" type="password" autocomplete="current-password" required>
+    </label>
+    <button class="btn arrow" type="submit">Open</button>
+  </form>
+  <div id="staff-body" hidden>
+    <section class="chart">
+      <h2>Check a winner’s code</h2>
+      <form id="claim-form">
+        <input class="field code" id="claim-code" type="text" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Prize code" required>
+        <button class="btn" type="submit">Check and mark as claimed</button>
+      </form>
+      <p class="verdict" id="claim-result" role="status" hidden></p>
+    </section>
+    <section class="chart">
+      <h2>So far</h2>
+      <p id="staff-summary"></p>
+      <ul class="prize-list" id="prize-list"></ul>
+    </section>
+    <section class="chart">
+      <h2>Settings</h2>
+      <form id="settings-form">
+        <label class="check"><input type="checkbox" id="set-on"> Give out prizes</label>
+        <label for="set-one-in">Chance of winning: 1 in
+          <input class="field num" id="set-one-in" type="number" inputmode="numeric" min="1" max="100000" required>
+        </label>
+        <label for="set-total">Prizes to give away in total
+          <input class="field num" id="set-total" type="number" inputmode="numeric" min="0" max="10000" required>
+        </label>
+        <label for="set-gap">Shortest time between two winners, in minutes
+          <input class="field num" id="set-gap" type="number" inputmode="numeric" min="0" max="10000" required>
+        </label>
+        <p class="hint" id="set-hint"></p>
+        <button class="btn" type="submit">Save settings</button>
+      </form>
+    </section>
+    <button class="link-btn" type="button" id="staff-lock">Lock this page</button>
+  </div>
+</main>
+
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -401,6 +504,7 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
   var POLL_MS = 10000;          // how often the results refresh
   var KIOSK_IDLE_MS = 60000;    // kiosk: return to the start after this long untouched
   var KIOSK_DONE_MS = 20000;    // kiosk: how long the thank-you screen stays up
+  var KIOSK_PRIZE_MS = 180000;  // kiosk: how long a "You've won" screen stays up
 
   // multi: several options may be chosen; max: at most this many.
   // Each option is [id, label, short label for the one-screen display].
@@ -470,6 +574,9 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
 
   var PENDING_KEY = "ic1quiz.pending";
   var DONE_KEY = "ic1quiz.done";
+  var PRIZE_KEY = "ic1quiz.prize";
+  var STAFF_KEY = "ic1quiz.staff";
+  var CODE_RE = /^[A-Z0-9]{4,8}$/;
 
   var params = new URLSearchParams(location.search);
   var KIOSK = params.has("kiosk");
@@ -585,16 +692,23 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
     if (!LIVE || flushing || !pending.length) return Promise.resolve();
     flushing = true;
     var item = pending[0];
-    return rpc("submit_response", { p_client_id: item.id, p_answers: item.body.answers, p_other: item.body.other || {} })
+    // Only the answer sheet the person has just sent can win a prize: they are
+    // still looking at the screen. Older ones waiting from an offline spell can't.
+    var canWin = item.id === currentId;
+    return rpc("submit_response", { p_client_id: item.id, p_answers: item.body.answers, p_other: item.body.other || {}, p_prize: canWin })
       .then(function (res) {
-        flushing = false;
         // 400: the database refused it as invalid, so retrying can never work.
-        if (!res.ok && res.status !== 400) return;
-        pending = pending.filter(function (p) { return p.id !== item.id; });
-        savePending();
-        if (res.ok && server) addBody(server, item.body);
-        renderAll();
-        return flush();
+        if (!res.ok && res.status !== 400) { flushing = false; return; }
+        var reply = res.ok ? res.json().catch(function () { return null; }) : Promise.resolve(null);
+        return reply.then(function (data) {
+          flushing = false;
+          pending = pending.filter(function (p) { return p.id !== item.id; });
+          savePending();
+          if (res.ok && server) addBody(server, item.body);
+          if (data && typeof data.prize === "string" && CODE_RE.test(data.prize)) wonPrize(item.id, data.prize);
+          renderAll();
+          return flush();
+        });
       }, function () { flushing = false; });
   }
 
@@ -616,8 +730,28 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
   var otherText = {};     // question id -> typed text
   var sentAny = false;
   var doneAt = 0;
+  var currentId = null;   // id of the answer sheet just sent from this screen
+  var prize = null;       // prize code, if that answer sheet won
 
-  if (!KIOSK && store(DONE_KEY)) { step = QUESTIONS.length; sentAny = true; }
+  if (!KIOSK && store(DONE_KEY)) {
+    step = QUESTIONS.length; sentAny = true;
+    var kept = store(PRIZE_KEY);
+    if (kept && CODE_RE.test(kept)) prize = kept;
+  }
+
+  function wonPrize(id, code) {
+    if (id !== currentId || step < QUESTIONS.length) return;
+    prize = code;
+    if (!KIOSK) store(PRIZE_KEY, code);
+    lastTouch = Date.now();
+    if (view !== "quiz") location.hash = "#quiz";
+    renderQuiz();
+    window.scrollTo(0, 0);
+  }
+
+  function setWinMode() {
+    document.body.classList.toggle("win-mode", view === "quiz" && !!prize && step >= QUESTIONS.length);
+  }
 
   function setJet() {
     var p = step < 0 ? 0 : Math.min(1, step / QUESTIONS.length);
@@ -625,7 +759,7 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
   }
 
   function resetQuiz() {
-    step = -1; answers = {}; otherText = {}; sentAny = false; doneAt = 0;
+    step = -1; answers = {}; otherText = {}; sentAny = false; doneAt = 0; currentId = null; prize = null;
     renderQuiz();
   }
 
@@ -633,6 +767,22 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
     var root = $("quiz");
     root.textContent = "";
     setJet();
+    setWinMode();
+
+    if (prize && step >= QUESTIONS.length) {
+      root.appendChild(el("p", { class: "label", text: "Spot prize" }));
+      root.appendChild(el("h1", { class: "win-title", text: "You’ve won!", tabindex: "-1" }));
+      root.appendChild(el("p", { class: "lede", text: "Show this screen to the UKCEH team at our booth to claim your prize." }));
+      root.appendChild(el("p", { class: "win-code" }, [el("small", { text: "Your prize code" }), el("b", { text: prize })]));
+      root.appendChild(el("div", { class: "actions" }, [
+        el("a", { class: "btn arrow", href: "#results", text: "See how everyone answered" }),
+        KIOSK ? el("button", { class: "btn quiet", type: "button", text: "Start again for the next person", onclick: resetQuiz }) : null
+      ]));
+      root.appendChild(el("p", { class: "small", text: KIOSK
+        ? "Make a note of your code if you can’t come to the booth straight away. Each code can be claimed once."
+        : "Take a screenshot in case you close this page. Each code can be claimed once." }));
+      return;
+    }
 
     if (step < 0) {
       root.appendChild(el("p", { class: "label", text: "IC1 chemicals quiz" }));
@@ -754,13 +904,15 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
     if (!any) return;
     if (!KIOSK) store(DONE_KEY, "1");
     var id = "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+    currentId = id;
     pending.push({ id: id, body: body });
     savePending();
     renderAll();
     if (!LIVE) { toast("Saved on this device only"); return; }
     flush().then(function () {
       var waiting = pending.some(function (p) { return p.id === id; });
-      toast(waiting ? "Saved on this device. It will send when the connection returns." : "Answers sent");
+      if (waiting) toast("Saved on this device. It will send when the connection returns.");
+      else if (!prize) toast("Answers sent");
     });
   }
 
@@ -869,10 +1021,138 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
     $("d-status").hidden = !msg;
   }
 
+  /* ---------- booth team page (#staff): check prize codes, tune the draw ---------- */
+  var staffPass = store(STAFF_KEY) || "";
+  var staffData = null;
+  var settingsShown = false;
+
+  function when(iso) {
+    var d = new Date(iso);
+    return isNaN(d) ? "" : d.toLocaleString("en-GB", { weekday: "short", hour: "2-digit", minute: "2-digit" });
+  }
+  function staffNote(msg) { $("staff-note").textContent = msg || ""; $("staff-note").hidden = !msg; }
+
+  // Calls a staff function. Resolves with its reply, or null after showing why not.
+  function staffRpc(name, args) {
+    args = args || {};
+    args.p_pass = staffPass;
+    return rpc(name, args).then(function (res) {
+      if (res.status === 401 || res.status === 403) {
+        staffLock("That passphrase wasn’t accepted. It is set in the Supabase SQL editor: see the README.");
+        return null;
+      }
+      if (res.status === 404) { staffNote("The database needs updating: run supabase/schema.sql again."); return null; }
+      if (!res.ok) { staffNote("That didn’t work. Check the values and try again."); return null; }
+      staffNote("");
+      return res.status === 204 ? {} : res.json();
+    }, function () { staffNote("No connection. Try again in a moment."); return null; });
+  }
+
+  function staffLock(msg) {
+    staffPass = ""; staffData = null; settingsShown = false;
+    store(STAFF_KEY, null);
+    renderStaff();
+    staffNote(msg);
+  }
+
+  function staffRefresh() {
+    if (!LIVE || !staffPass) return Promise.resolve();
+    return staffRpc("staff_prize_status").then(function (data) {
+      if (!data) return;
+      staffData = data;
+      store(STAFF_KEY, staffPass);
+      renderStaff();
+    });
+  }
+
+  function settingsHint() {
+    var n = Number($("set-one-in").value), total = Number($("set-total").value), gap = Number($("set-gap").value);
+    $("set-hint").textContent = !$("set-on").checked ? "Prizes are switched off: nobody will win."
+      : "About 1 in " + n + " people who finish the quiz will win" + (gap ? ", at least " + gap + " minutes apart" : "") +
+        ", until " + total + (total === 1 ? " prize has" : " prizes have") + " been won. People who answer fewer than four questions can’t win.";
+  }
+
+  function renderStaff() {
+    var open = !!(staffPass && staffData);
+    $("staff-login").hidden = open || !LIVE;
+    $("staff-body").hidden = !open;
+    if (!LIVE) { staffNote("This page needs the database, which isn’t available in this mode."); return; }
+    if (!open) return;
+    var cfg = staffData.settings || {};
+    var prizes = Array.isArray(staffData.prizes) ? staffData.prizes : [];
+    var claimed = prizes.filter(function (p) { return p.claimed_at; }).length;
+    var summary = staffData.responses + " responses. " + prizes.length + " of " + cfg.total + " prizes won, " + claimed + " claimed.";
+    if (!cfg.on) summary += " Prizes are switched off.";
+    else if (prizes.length >= cfg.total) summary += " All the prizes have been won: raise the total to give out more.";
+    $("staff-summary").textContent = summary;
+    var list = $("prize-list");
+    list.textContent = "";
+    prizes.forEach(function (p) {
+      list.appendChild(el("li", null, [
+        el("b", { text: String(p.code) }),
+        el("span", { text: "won " + when(p.won_at) }),
+        el("span", { class: p.claimed_at ? "" : "open", text: p.claimed_at ? "claimed " + when(p.claimed_at) : "not claimed yet" })
+      ]));
+    });
+    if (!settingsShown) {   // don't overwrite the boxes while someone is typing in them
+      $("set-on").checked = !!cfg.on;
+      $("set-one-in").value = cfg.one_in;
+      $("set-total").value = cfg.total;
+      $("set-gap").value = cfg.gap_minutes;
+      settingsShown = true;
+      settingsHint();
+    }
+  }
+
+  $("staff-login").addEventListener("submit", function (e) {
+    e.preventDefault();
+    staffPass = $("staff-pass").value;
+    $("staff-pass").value = "";
+    staffRefresh();
+  });
+  $("staff-lock").addEventListener("click", function () { staffLock(""); });
+  $("settings-form").addEventListener("input", settingsHint);
+  $("settings-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    staffRpc("staff_set_prizes", {
+      p_on: $("set-on").checked,
+      p_one_in: Number($("set-one-in").value),
+      p_total: Number($("set-total").value),
+      p_gap_minutes: Number($("set-gap").value)
+    }).then(function (ok) {
+      if (!ok) return;
+      toast("Settings saved");
+      settingsShown = false;
+      staffRefresh();
+    });
+  });
+  $("claim-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var code = $("claim-code").value.replace(/\s/g, "").toUpperCase();
+    var out = $("claim-result");
+    staffRpc("staff_claim_prize", { p_code: code }).then(function (r) {
+      if (!r) return;
+      out.hidden = false;
+      if (r.status === "ok") {
+        out.className = "verdict good";
+        out.textContent = code + " is a winner (won " + when(r.won_at) + "). Hand over the prize. The code is now marked as claimed.";
+        $("claim-code").value = "";
+      } else if (r.status === "already") {
+        out.className = "verdict bad";
+        out.textContent = code + " was already claimed, " + when(r.claimed_at) + ". Don’t give a second prize.";
+      } else {
+        out.className = "verdict bad";
+        out.textContent = code + " isn’t a prize code. Check it against the winner’s screen.";
+      }
+      staffRefresh();
+    });
+  });
+
   function renderAll() {
     var t = currentTally();
     if (view === "results") renderResults(t);
     if (view === "display") renderDisplay(t);
+    if (view === "staff") renderStaff();
   }
 
   /* ---------- routing ---------- */
@@ -880,10 +1160,12 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
   var started = 0;
 
   function route() {
-    view = location.hash === "#results" ? "results" : (location.hash === "#display" ? "display" : "quiz");
+    view = { "#results": "results", "#display": "display", "#staff": "staff" }[location.hash] || "quiz";
     $("quiz").hidden = view !== "quiz";
     $("results").hidden = view !== "results";
     $("display").hidden = view !== "display";
+    $("staff").hidden = view !== "staff";
+    setWinMode();
     $("jet").hidden = view !== "quiz";
     document.body.classList.toggle("display-mode", view === "display");
     ["quiz", "results"].forEach(function (v) {
@@ -891,7 +1173,8 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
     });
     window.scrollTo(0, 0);
     renderAll();
-    if (view !== "quiz") refresh();
+    if (view === "staff") staffRefresh();
+    else if (view !== "quiz") refresh();
   }
   window.addEventListener("hashchange", route);
   window.addEventListener("online", function () { flush(); refresh(); });
@@ -905,14 +1188,16 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
   setInterval(function () {
     if (document.hidden) return;
     if (pending.length) flush();
-    if (view !== "quiz") refresh();
+    if (view === "staff") staffRefresh();
+    else if (view !== "quiz") refresh();
   }, POLL_MS);
   setInterval(function () {
-    if (!KIOSK || view === "display") return;
+    if (!KIOSK || view === "display" || view === "staff") return;
     var idle = Date.now() - lastTouch;
     var onThanks = view === "quiz" && step >= QUESTIONS.length;
     var midway = view === "results" || (view === "quiz" && step >= 0);
-    if ((onThanks && idle > KIOSK_DONE_MS && Date.now() - doneAt > KIOSK_DONE_MS) || (midway && idle > KIOSK_IDLE_MS)) {
+    var linger = prize ? KIOSK_PRIZE_MS : KIOSK_DONE_MS;
+    if ((onThanks && idle > linger && Date.now() - doneAt > linger) || (midway && idle > KIOSK_IDLE_MS)) {
       resetQuiz();
       if (view !== "quiz") location.hash = "#quiz";
     }
@@ -931,6 +1216,7 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
       addBody(server, fake);
     }
   }
+  if (DEMO && params.has("win")) { step = QUESTIONS.length; sentAny = true; prize = "K7QF"; }   // preview the winner screen
   started = Date.now();
   route();
   renderQuiz();
