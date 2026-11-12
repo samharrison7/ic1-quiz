@@ -1042,7 +1042,12 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
         return null;
       }
       if (res.status === 404) { staffNote("The database needs updating: run supabase/schema.sql again."); return null; }
-      if (!res.ok) { staffNote("That didn’t work. Check the values and try again."); return null; }
+      if (!res.ok) {
+        return res.json().catch(function () { return {}; }).then(function (err) {
+          staffNote("That didn’t work" + (err && err.message ? " (the database said: " + String(err.message).slice(0, 160) + ")" : "") + ". Check the values and try again.");
+          return null;
+        });
+      }
       staffNote("");
       return res.status === 204 ? {} : res.json();
     }, function () { staffNote("No connection. Try again in a moment."); return null; });

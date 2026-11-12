@@ -11,7 +11,7 @@
 --
 -- After running this file for the first time, set the team passphrase (at least
 -- 8 characters) by running this separately. Do not save it in the repository:
---   update public.quiz_settings set staff_passphrase = 'choose something long';
+--   update public.quiz_settings set staff_passphrase = 'choose something long' where id;
 
 create table if not exists public.responses (
   id         bigint generated always as identity primary key,
@@ -299,7 +299,8 @@ as $$
 begin
   perform public.staff_guard(p_pass);
   update public.quiz_settings
-  set prizes_on = p_on, prize_one_in = p_one_in, prizes_total = p_total, prize_gap_minutes = p_gap_minutes;
+  set prizes_on = p_on, prize_one_in = p_one_in, prizes_total = p_total, prize_gap_minutes = p_gap_minutes
+  where id;   -- Supabase refuses an UPDATE without a WHERE when it comes through the API
 end;
 $$;
 

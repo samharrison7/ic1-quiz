@@ -26,7 +26,7 @@ Add `theme=light` for a white background, e.g. `?theme=light#display` or `?kiosk
 1. **Database:** in the Supabase dashboard, open **SQL Editor**, paste all of `supabase/schema.sql` and run it. It is safe to run again.
 2. **Team passphrase:** in the SQL Editor, run the line below with a passphrase of your own (at least 8 characters). It unlocks the `#staff` page. Don't save it in this repository, which is public.
    ```sql
-   update public.quiz_settings set staff_passphrase = 'choose something long';
+   update public.quiz_settings set staff_passphrase = 'choose something long' where id;
    ```
 3. **Key:** the project URL and publishable key are set near the top of the script in `index.html` (`SUPABASE_URL`, `SUPABASE_KEY`). The publishable key is meant to be public. Never put the secret key in this repo.
 4. **Hosting:** on GitHub, **Settings → Pages → Deploy from a branch → `main` / root**.

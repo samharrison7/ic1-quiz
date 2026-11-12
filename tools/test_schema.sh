@@ -19,6 +19,12 @@ $P -f supabase/schema.sql 2>/dev/null   # must be safe to run twice
 $P -c "update public.quiz_settings set prizes_on = false, staff_passphrase = 'correct horse battery'"
 
 fail=0
+# Supabase's API refuses UPDATE and DELETE statements that have no WHERE clause.
+if tr '\n' ' ' < supabase/schema.sql | grep -Eio '(update public\.[a-z_]+ set|delete from)[^;]*;' | grep -vi ' where ' | grep -q .; then
+  echo "  FAIL  schema.sql has an UPDATE or DELETE without WHERE"; fail=1
+else
+  echo "  ok    every UPDATE and DELETE has a WHERE"
+fi
 ok()  { if $P -c "set role anon; $2" >/dev/null 2>&1; then echo "  ok    $1"; else echo "  FAIL  $1 (should be allowed)"; fail=1; fi; }
 no()  { if $P -c "set role anon; $2" >/dev/null 2>&1; then echo "  FAIL  $1 (should be refused)"; fail=1; else echo "  ok    $1 refused"; fi; }
 S="select public.submit_response"
