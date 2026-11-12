@@ -55,6 +55,7 @@ Who can win: anyone who answers at least four questions, on a phone or the booth
 - **Wake the database:** free Supabase projects pause after a week without use. Answer the quiz once a day or two before the event, and check it appears on the display.
 - **Clear test answers:** in the SQL Editor, run `truncate public.responses restart identity cascade;` This also clears any prizes the test answers won.
 - **Booth iPad:** open the address in Safari, then **Share → Add to Home Screen** to run it full screen. Use **Guided Access** (Settings → Accessibility) to lock the iPad to it. Hold the display iPad in landscape.
+- **Switching an iPad between the two jobs:** on the one-screen display, tap the QR code to open the kiosk quiz. On the kiosk quiz, tap the UKCEH logo in the top bar to open the display. Neither is marked on screen; they are for the booth team.
 - **Poor wifi:** answers are kept on the device and sent when the connection returns; the results page says how many are waiting. Don't clear the browser's site data while answers are waiting.
 - **Download the answers:** Supabase dashboard → **Table Editor → `responses_export` → Export to CSV**. This has one row per person, including any typed "Other" text.
 

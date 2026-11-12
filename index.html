@@ -164,7 +164,7 @@ h1, h2 { font-weight: 500; letter-spacing: -0.02em; line-height: 1.1; margin: 0 
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-@media (hover: hover) { .opt:hover:not(:disabled) { border-color: var(--accent); background: var(--panel); } }
+@media (hover: hover) { .opt:hover:not(:disabled):not([aria-pressed="true"]) { border-color: var(--accent); background: var(--panel); } }
 .opt .mark {
   flex: none;
   width: 1.05rem;
@@ -404,7 +404,7 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
 <div class="jet" id="jet" aria-hidden="true"><div class="jet-fill"></div></div>
 
 <header class="bar">
-  <img class="logo" src="assets/ukceh-logo-white.png" width="800" height="211" alt="UK Centre for Ecology &amp; Hydrology">
+  <img class="logo" id="bar-logo" src="assets/ukceh-logo-white.png" width="800" height="211" alt="UK Centre for Ecology &amp; Hydrology">
   <a class="site" id="site-link" href="https://ic1.ceh.ac.uk" target="_blank" rel="noopener">UKCEH at IC1</a>
   <nav aria-label="Views">
     <a href="#quiz" id="nav-quiz">Quiz</a>
@@ -437,7 +437,7 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
       <h1>What delegates are telling us</h1>
     </div>
     <p class="d-count"><b id="d-count">0</b><span id="d-count-label">responses</span></p>
-    <div class="d-qr"><span>Scan to<br>take the quiz</span><img src="assets/qr.svg" width="120" height="120" alt="QR code that opens the quiz"></div>
+    <div class="d-qr"><span>Scan to<br>take the quiz</span><img id="d-qr-img" src="assets/qr.svg" width="120" height="120" alt="QR code that opens the quiz"></div>
   </header>
   <div class="d-grid" id="d-grid"></div>
   <p class="d-status" id="d-status" hidden></p>
@@ -1181,6 +1181,20 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
     if (view === "staff") staffRefresh();
     else if (view !== "quiz") refresh();
   }
+  // Unmarked shortcuts for the booth team, to switch an iPad between its two jobs:
+  // tap the QR code on the display to open the kiosk quiz, and tap the logo on
+  // the kiosk quiz to open the display.
+  function roleUrl(kiosk, hash) {
+    var q = new URLSearchParams();
+    if (kiosk) q.set("kiosk", "1");
+    if (params.get("theme") === "light") q.set("theme", "light");
+    if (DEMO) q.set("demo", "1");
+    var qs = q.toString();
+    return location.pathname + (qs ? "?" + qs : "") + hash;
+  }
+  $("d-qr-img").addEventListener("click", function () { location.assign(roleUrl(true, "#quiz")); });
+  if (KIOSK) $("bar-logo").addEventListener("click", function () { location.assign(roleUrl(false, "#display")); });
+
   window.addEventListener("hashchange", route);
   window.addEventListener("online", function () { flush(); refresh(); });
   document.addEventListener("visibilitychange", function () { if (!document.hidden) { flush(); if (view !== "quiz") refresh(); } });
