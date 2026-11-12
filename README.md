@@ -37,7 +37,7 @@ Add `theme=light` for a white background, e.g. `?theme=light#display` or `?kiosk
 
 The page holds only the publishable key, and `supabase/schema.sql` limits that key to two things:
 
-- **Add an answer sheet.** The database rejects unknown questions or options, more than one pick on a choose-one question, and typed text over 80 characters.
+- **Add an answer sheet.** The database rejects unknown questions or options, more picks than a question allows, and typed text over 80 characters.
 - **Read counts per option.** Individual rows and typed "Other" text are never sent to browsers, so nothing a visitor types can appear on the booth screen.
 
 No names, emails or IP addresses are stored. Anyone determined could still submit the form many times; the database stops accepting answers at 20,000 rows.

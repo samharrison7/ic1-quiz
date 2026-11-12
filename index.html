@@ -90,9 +90,13 @@ h1, h2 { font-weight: 500; letter-spacing: -0.02em; line-height: 1.1; margin: 0 
 .bar .site {
   padding-left: 1rem;
   border-left: 1px solid rgba(255, 255, 255, 0.4);
+  color: var(--ukceh-white);
   font-size: 0.95rem;
   font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
 }
+.bar a.site:hover { color: var(--ukceh-data); }
 .bar nav { display: flex; gap: 1.25rem; margin-left: auto; }
 .bar nav a {
   padding: 0.35rem 0;
@@ -102,7 +106,16 @@ h1, h2 { font-weight: 500; letter-spacing: -0.02em; line-height: 1.1; margin: 0 
 }
 .bar nav a:hover { color: var(--ukceh-data); }
 .bar nav a[aria-current="page"] { box-shadow: inset 0 -2px 0 var(--ukceh-data); }
-@media (max-width: 389.98px) { .bar .site { display: none; } }
+/* Small screens: tighten up so the logo, site link and views share one row */
+@media (max-width: 479.98px) {
+  .bar { gap: 0.6rem; padding-left: max(1rem, env(safe-area-inset-left)); padding-right: max(1rem, env(safe-area-inset-right)); }
+  .bar .logo { height: 30px; }
+  .bar .site { padding-left: 0.6rem; font-size: 0.85rem; }
+  .bar nav { gap: 0.8rem; }
+  .bar nav a { font-size: 0.85rem; }
+}
+/* Too narrow for all three: the views drop to a second row */
+@media (max-width: 359.98px) { .bar { flex-wrap: wrap; row-gap: 0.25rem; } }
 
 /* The jet: quiz progress rises up the right edge, like the Jet d'Eau */
 .jet {
@@ -334,7 +347,7 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
 
 <header class="bar">
   <img class="logo" src="assets/ukceh-logo-white.png" width="800" height="211" alt="UK Centre for Ecology &amp; Hydrology">
-  <span class="site">IC1</span>
+  <a class="site" id="site-link" href="https://ic1.ceh.ac.uk" target="_blank" rel="noopener">UKCEH at IC1</a>
   <nav aria-label="Views">
     <a href="#quiz" id="nav-quiz">Quiz</a>
     <a href="#results" id="nav-results">Results</a>
@@ -389,6 +402,7 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
   var KIOSK_IDLE_MS = 60000;    // kiosk: return to the start after this long untouched
   var KIOSK_DONE_MS = 20000;    // kiosk: how long the thank-you screen stays up
 
+  // multi: several options may be chosen; max: at most this many.
   // Each option is [id, label, short label for the one-screen display].
   // Ids must match quiz_spec() in supabase/schema.sql.
   var QUESTIONS = [
@@ -405,7 +419,7 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
       ["youth", "Youth organisation"],
       ["other", "Other"]
     ]},
-    { id: "chem", text: "Which chemicals or contaminants are your highest priority?", short: "Highest-priority chemicals", multi: false, options: [
+    { id: "chem", text: "Which chemicals or contaminants are your highest priority?", short: "Highest-priority chemicals", multi: true, max: 3, options: [
       ["pfas", "PFAS (“forever chemicals”)", "PFAS"],
       ["plastics", "Plastics, microplastics and plastic chemicals", "Plastics and microplastics"],
       ["pesticides", "Pesticides"],
@@ -424,7 +438,7 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
       ["showcase", "Showcase my own work", "Showcase my work"],
       ["other", "Other"]
     ]},
-    { id: "area", text: "Which areas of work matter most to you?", short: "Priority area of work", multi: false, options: [
+    { id: "area", text: "Which areas of work matter most to you?", short: "Priority areas of work", multi: true, options: [
       ["a", "Laws, regulation and institutional capacity (A)", "A · Laws and regulation"],
       ["b", "Monitoring, data and information access (B)", "B · Monitoring and data"],
       ["c", "Identifying and prioritising issues of concern (C)", "C · Issues of concern"],
@@ -452,6 +466,8 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
   // got the fun question right, so the booth screen doesn't give the answer away.
   var DISPLAY_COLUMNS = [["org", "jet-stat"], ["chem", "goal"], ["area", "support"]];
 
+  var NUMBER_WORDS = { 2: "two", 3: "three", 4: "four", 5: "five" };
+
   var PENDING_KEY = "ic1quiz.pending";
   var DONE_KEY = "ic1quiz.done";
 
@@ -459,6 +475,14 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
   var KIOSK = params.has("kiosk");
   var DEMO = params.has("demo");   // made-up results, nothing sent or fetched: for checking the layout
   var LIVE = !!(SUPABASE_URL && SUPABASE_KEY) && !DEMO;
+  if (KIOSK) {
+    // A shared device should stay on the quiz, so the site link becomes plain text.
+    var siteLink = document.getElementById("site-link");
+    var siteText = document.createElement("span");
+    siteText.className = "site";
+    siteText.textContent = siteLink.textContent;
+    siteLink.parentNode.replaceChild(siteText, siteLink);
+  }
   if (params.get("theme") === "light") document.documentElement.setAttribute("data-theme", "light");
 
   /* ---------- small helpers ---------- */
@@ -517,7 +541,7 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
       var valid = picks.filter(function (p, i) {
         return typeof p === "string" && Object.prototype.hasOwnProperty.call(t.byQ[q.id].counts, p) && picks.indexOf(p) === i;
       });
-      if (!q.multi) valid = valid.slice(0, 1);
+      valid = valid.slice(0, q.multi ? (q.max || valid.length) : 1);
       if (!valid.length) return;
       t.byQ[q.id].answered += 1;
       valid.forEach(function (p) { t.byQ[q.id].counts[p] += 1; });
@@ -642,7 +666,7 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
 
     root.appendChild(el("p", { class: "label", text: "Question " + (step + 1) + " of " + QUESTIONS.length }));
     root.appendChild(el("h2", { text: q.text, tabindex: "-1" }));
-    root.appendChild(el("p", { class: "hint", text: isFun ? "One for fun. Choose one." : (q.multi ? "Choose all that apply." : "Choose one.") }));
+    root.appendChild(el("p", { class: "hint", text: isFun ? "One for fun. Choose one." : (q.max ? "Choose up to " + NUMBER_WORDS[q.max] + "." : (q.multi ? "Choose all that apply." : "Choose one.")) }));
 
     var list = el("ul", { class: "options" });
     q.options.forEach(function (o) {
@@ -694,7 +718,9 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
     var cur = (answers[q.id] || []).slice();
     var at = cur.indexOf(optId);
     if (q.multi) {
-      if (at === -1) cur.push(optId); else cur.splice(at, 1);
+      if (at !== -1) cur.splice(at, 1);
+      else if (q.max && cur.length >= q.max) { toast("You can choose up to " + NUMBER_WORDS[q.max] + ". Untick one to change it."); return; }
+      else cur.push(optId);
     } else {
       cur = at === -1 ? [optId] : (q.correct ? cur : []);
     }
@@ -806,7 +832,7 @@ body.display-mode .bar, body.display-mode .jet { display: none; }
         var q = question(id);
         var chart = el("section", { class: "d-chart" });
         chart.style.setProperty("--n", String(q.options.length + 1.3));
-        chart.appendChild(el("h2", { text: q.short }, [q.multi ? el("small", { text: "choose any" }) : null]));
+        chart.appendChild(el("h2", { text: q.short }, [q.multi ? el("small", { text: q.max ? "up to " + q.max : "choose any" }) : null]));
         var rows = el("ul", { class: "d-rows" });
         displayParts.rows[id] = {};
         q.options.forEach(function (o) {

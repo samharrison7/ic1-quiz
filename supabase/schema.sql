@@ -1,6 +1,6 @@
 -- IC1 quiz: database setup for Supabase.
 -- Paste the whole file into the Supabase SQL editor and run it once.
--- It is safe to run again: it replaces the functions and keeps existing answers.
+-- It is safe to run again: it replaces the functions and view and keeps existing answers.
 --
 -- Design: the page only holds the publishable key, so visitors get exactly two
 -- abilities, each through a function:
@@ -19,7 +19,8 @@ create table if not exists public.responses (
 alter table public.responses enable row level security;
 revoke all on public.responses from anon, authenticated;
 
--- The questions and their allowed option ids. Keep in step with QUESTIONS in index.html.
+-- The questions and their allowed option ids. "multi" allows several picks,
+-- "max" caps how many. Keep in step with QUESTIONS in index.html.
 create or replace function public.quiz_spec()
 returns jsonb
 language sql
@@ -28,9 +29,9 @@ set search_path = ''
 as $$
   select '{
     "org":     {"multi": false, "opts": ["gov", "igo", "industry", "finance", "academia", "ngo", "health", "labour", "indigenous", "youth", "other"]},
-    "chem":    {"multi": false, "opts": ["pfas", "plastics", "pesticides", "metals", "pharma", "legacy", "other"]},
+    "chem":    {"multi": true,  "max": 3, "opts": ["pfas", "plastics", "pesticides", "metals", "pharma", "legacy", "other"]},
     "goal":    {"multi": true,  "opts": ["negotiate", "partners", "science", "tools", "funding", "capacity", "showcase", "other"]},
-    "area":    {"multi": false, "opts": ["a", "b", "c", "d", "e"]},
+    "area":    {"multi": true,  "opts": ["a", "b", "c", "d", "e"]},
     "support": {"multi": true,  "opts": ["monitoring", "modelling", "indicators", "appraisal", "training", "opendata", "other"]},
     "jet":     {"multi": false, "opts": ["fireworks", "valve", "fire", "gift"]}
   }'::jsonb
@@ -73,7 +74,7 @@ begin
     n := jsonb_array_length(v);
     max_picks := 1;
     if (q ->> 'multi')::boolean then
-      max_picks := jsonb_array_length(q -> 'opts');
+      max_picks := coalesce((q ->> 'max')::int, jsonb_array_length(q -> 'opts'));
     end if;
     if n < 1
        or n > max_picks
@@ -149,18 +150,19 @@ grant execute on function public.get_results() to anon, authenticated;
 
 -- For you, in the Supabase dashboard (Table Editor > responses_export > Export to CSV):
 -- one row per person, one column per question. Not readable with the publishable key.
-create or replace view public.responses_export
+drop view if exists public.responses_export;
+create view public.responses_export
 with (security_invoker = true)
 as
 select
   created_at as submitted_at,
   answers -> 'org' ->> 0  as organisation,
   other ->> 'org'         as organisation_other,
-  answers -> 'chem' ->> 0 as priority_chemicals,
+  (select string_agg(x, '; ') from jsonb_array_elements_text(answers -> 'chem') x)    as priority_chemicals,
   other ->> 'chem'        as priority_chemicals_other,
   (select string_agg(x, '; ') from jsonb_array_elements_text(answers -> 'goal') x)    as goals,
   other ->> 'goal'        as goals_other,
-  answers -> 'area' ->> 0 as area_of_work,
+  (select string_agg(x, '; ') from jsonb_array_elements_text(answers -> 'area') x)    as areas_of_work,
   (select string_agg(x, '; ') from jsonb_array_elements_text(answers -> 'support') x) as scientific_support,
   other ->> 'support'     as scientific_support_other,
   answers -> 'jet' ->> 0  as jet_d_eau
