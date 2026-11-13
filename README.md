@@ -2,20 +2,22 @@
 
 A six-question quiz for the UKCEH booth at the first International Conference of the Global Framework on Chemicals (IC1, 16–20 November 2026). Delegates scan a QR code (or use the booth iPad), answer, and see how everyone else answered. It follows the UKCEH branding of the [IC1 site](https://github.com/samharrison7/ic1-site).
 
-- **Page:** one static file, `index.html`, hosted on GitHub Pages. No build step.
+- **Page:** one static file, `index.html`, with no build step. It is published as the `quiz/` folder of the [IC1 site](https://github.com/samharrison7/ic1-site), at `https://ic1.ceh.ac.uk/quiz/`.
 - **Answers:** a free [Supabase](https://supabase.com/) project (hosted Postgres).
 
 ## Links
 
 | Use | Address |
 |---|---|
-| Quiz, for phones (this is what the QR code opens) | `https://samharrison7.github.io/ic1-quiz/` |
-| Quiz on the booth iPad | `https://samharrison7.github.io/ic1-quiz/?kiosk` |
-| All results on one screen | `https://samharrison7.github.io/ic1-quiz/#display` |
-| Results that scroll (what phones see) | `https://samharrison7.github.io/ic1-quiz/#results` |
-| Booth team: check prize codes, tune the prize draw | `https://samharrison7.github.io/ic1-quiz/#staff` |
-| Layout check with made-up numbers | `https://samharrison7.github.io/ic1-quiz/?demo#display` |
-| Preview of the winner screen | `https://samharrison7.github.io/ic1-quiz/?demo&win` |
+| Quiz, for phones (this is what the QR code opens) | `https://ic1.ceh.ac.uk/quiz/` |
+| Quiz on the booth iPad | `https://ic1.ceh.ac.uk/quiz/?kiosk` |
+| All results on one screen | `https://ic1.ceh.ac.uk/quiz/#display` |
+| Results that scroll (what phones see) | `https://ic1.ceh.ac.uk/quiz/#results` |
+| Booth team: check prize codes, tune the prize draw | `https://ic1.ceh.ac.uk/quiz/#staff` |
+| Layout check with made-up numbers | `https://ic1.ceh.ac.uk/quiz/?demo#display` |
+| Preview of the winner screen | `https://ic1.ceh.ac.uk/quiz/?demo&win` |
+
+The quiz is also still up at its original address, `https://samharrison7.github.io/ic1-quiz/`, served straight from this repository. Both addresses use the same database.
 
 Add `theme=light` for a white background, e.g. `?theme=light#display` or `?kiosk&theme=light`.
 
@@ -29,7 +31,19 @@ Add `theme=light` for a white background, e.g. `?theme=light#display` or `?kiosk
    update public.quiz_settings set staff_passphrase = 'choose something long' where id;
    ```
 3. **Key:** the project URL and publishable key are set near the top of the script in `index.html` (`SUPABASE_URL`, `SUPABASE_KEY`). The publishable key is meant to be public. Never put the secret key in this repo.
-4. **Hosting:** on GitHub, **Settings → Pages → Deploy from a branch → `main` / root**.
+4. **Hosting:** see "Publishing a change" below.
+
+## Publishing a change
+
+`ic1.ceh.ac.uk/quiz/` is a copy of this repository's `index.html` and `assets/` inside the IC1 site, so a change here only reaches that address when the site is republished. With both repositories checked out side by side:
+
+```bash
+cd ../ic1-site
+pixi run sync-quiz   # copies the quiz into ic1-site/quiz/
+pixi run publish     # rebuilds and publishes the site
+```
+
+Commit the updated `quiz/` folder in `ic1-site` too. Pushing this repository's `main` branch updates only the original `samharrison7.github.io/ic1-quiz/` address (GitHub **Settings → Pages → Deploy from a branch → `main` / root**).
 
 ## Spot prizes
 
